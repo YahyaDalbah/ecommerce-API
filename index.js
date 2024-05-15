@@ -9,6 +9,7 @@ import couponRouter from "./api/Coupon.router.js";
 import brandRouter from "./api/brand.router.js";
 import productRouter from "./api/product.router.js";
 import cartRouter from "./api/cart.router.js";
+
 const app = express();
 const PORT = 3000;
 await connectDB();

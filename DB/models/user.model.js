@@ -1,4 +1,4 @@
-import mongoose, { Schema, model } from "mongoose";
+import mongoose, { Schema, model,Types } from "mongoose";
 
 const userSchema = new Schema({
   userName: {
@@ -42,7 +42,8 @@ const userSchema = new Schema({
   },
   changedPasswordDate:{
     type: Date
-  }
+  },
+  wishList: [{type: Types.ObjectId,ref:"Product"}]
 });
 
 const User = mongoose.models.User || model("User", userSchema);

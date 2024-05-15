@@ -90,11 +90,27 @@ productRouter.post(
 );
 
 productRouter.get(
-  "/:productId",
+  "/",
   asyncHandler(async (req, res) => {
-    const { productId } = req.params;
-    const product = await Product.findById(productId);
-    return res.json(product);
+    const { page, size } = req.query;
+    let filterQuery = { ...req.query };
+    const arr = ["page", "size", "sort", "search"];
+    arr.forEach((filter) => {
+      delete filterQuery[filter];
+    });
+    filterQuery = JSON.parse(
+      JSON.stringify(filterQuery).replace(
+        /gt|gte|lt|lte|in|nin|eq|neq/g,
+        (match) => `$${match}`
+      )
+    );
+    const skip = (page - 1) * size;
+    const products = await Product.find(filterQuery)
+      .limit(size)
+      .skip(skip)
+      .sort(req.query.sort?.replaceAll(",", " "))
+      .find({ name: { $regex: req.query.search || "", $options: "i" }, });
+    return res.json(products);
   })
 );
 productRouter.put(
@@ -106,10 +122,9 @@ productRouter.put(
   ]),
   validate(updateProductSchema),
   asyncHandler(async (req, res, next) => {
-    
     const { productId } = req.params;
 
-    const product = await Product.findByIdAndUpdate(productId,{...req.body});
+    const product = await Product.findByIdAndUpdate(productId, { ...req.body });
 
     if (req.files && req.files.mainImage) {
       const { secure_url, public_id } = await cloudinary.uploader.upload(
@@ -122,7 +137,7 @@ productRouter.put(
       const image = {};
       image.secure_url = secure_url;
       image.public_id = public_id;
-      await cloudinary.uploader.destroy(product.mainImage.public_id)
+      await cloudinary.uploader.destroy(product.mainImage.public_id);
       product.mainImage = image;
     }
     if (req.files && req.files.subImages) {
@@ -148,7 +163,7 @@ productRouter.put(
     return res.json(product);
   })
 );
-productRouter.patch("/softDelete/:productId",(req,res) => { //just update the deleted field
-
+productRouter.patch("/softDelete/:productId", (req, res) => {
+  //just update the deleted field
 });
 export default productRouter;
