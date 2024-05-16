@@ -9,9 +9,22 @@ import couponRouter from "./api/Coupon.router.js";
 import brandRouter from "./api/brand.router.js";
 import productRouter from "./api/product.router.js";
 import cartRouter from "./api/cart.router.js";
+import cors from "cors"
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+var whitelist = ["http://127.0.0.1:5500", "http://localhost:3000"];
+var corsOptions = {
+  origin: function (origin, callback) {
+    console.log(origin)
+    if (whitelist.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+};
+app.use(cors(corsOptions))
 await connectDB();
 app.use(express.json());
 app.use("/auth", authRouter);
@@ -22,7 +35,7 @@ app.use("/brand", brandRouter);
 app.use("/product", productRouter);
 app.use("/cart", cartRouter);
 app.listen(PORT, () => {
-  console.log("server listening on 3000");
+  console.log(`server listening on ${PORT}`);
 });
 
 app.use(gloablaErrorHandler);
