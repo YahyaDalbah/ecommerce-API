@@ -59,9 +59,7 @@ productRouter.post(
       const { secure_url, public_id } = await cloudinary.uploader.upload(
         req.files.mainImage[0].path,
         { folder: `ecommerce/product` },
-        function (error, result) {
-          if (error) console.log(error);
-        }
+        
       );
       const image = {};
       image.secure_url = secure_url;
@@ -74,9 +72,7 @@ productRouter.post(
         const { secure_url, public_id } = await cloudinary.uploader.upload(
           file.path,
           { folder: `ecommerce/product` },
-          function (error, result) {
-            if (error) console.log(error);
-          }
+          
         );
         const image = {};
         image.secure_url = secure_url;
@@ -130,9 +126,7 @@ productRouter.put(
       const { secure_url, public_id } = await cloudinary.uploader.upload(
         req.files.mainImage[0].path,
         { folder: `ecommerce/product` },
-        function (error, result) {
-          if (error) console.log(error);
-        }
+        
       );
       const image = {};
       image.secure_url = secure_url;
@@ -146,9 +140,7 @@ productRouter.put(
         const { secure_url, public_id } = await cloudinary.uploader.upload(
           file.path,
           { folder: `ecommerce/product` },
-          function (error, result) {
-            if (error) console.log(error);
-          }
+          
         );
         const image = {};
         image.secure_url = secure_url;

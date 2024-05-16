@@ -21,9 +21,7 @@ userRouter.patch(
     const { id } = verify(token);
     const {secure_url,public_id} = await cloudinary.uploader.upload(
       req.file.path,
-      function (error, result) {
-        if(error)console.log(error);
-      }
+      
     );
     
     

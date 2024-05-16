@@ -26,7 +26,7 @@ export function auth(accessRoles = []) {
     }
     req.user = { id, userName: authUser.userName, role: authUser.role };
 
-    if (parseInt(authUser.changedPasswordDate.getTime() / 1000) > iat) {
+    if (parseInt(authUser.changedPasswordDate?.getTime() / 1000) > iat) {
       return next({ err: "expired token" });
     }
     next();

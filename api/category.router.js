@@ -46,9 +46,7 @@ categoryRouter.post(
       const { secure_url, public_id } = await cloudinary.uploader.upload(
         req.file.path,
         { folder: `ecommerce/category` },
-        function (error, result) {
-          if (error) console.log(error);
-        }
+        
       );
       image.secure_url = secure_url;
       image.public_id = public_id;
@@ -88,9 +86,7 @@ categoryRouter.put(
       const { secure_url, public_id } = await cloudinary.uploader.upload(
         req.file.path,
         { folder: `ecommerce/category` },
-        function (error, result) {
-          if (error) console.log(error);
-        }
+        
       );
       await cloudinary.uploader.destroy(category.image.public_id);
       image.secure_url = secure_url;

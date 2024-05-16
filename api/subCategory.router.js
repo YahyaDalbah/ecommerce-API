@@ -34,9 +34,7 @@ subCategoryRouter.post(
       const { secure_url, public_id } = await cloudinary.uploader.upload(
         req.file.path,
         { folder: `ecommerce/category` },
-        function (error, result) {
-          if (error) console.log(error);
-        }
+        
       );
       image.secure_url = secure_url;
       image.public_id = public_id;
@@ -77,9 +75,7 @@ subCategoryRouter.put(
       const { secure_url, public_id } = await cloudinary.uploader.upload(
         req.file.path,
         { folder: `ecommerce/subCategory` },
-        function (error, result) {
-          if (error) console.log(error);
-        }
+        
       );
       if (subCategory.image)
         await cloudinary.uploader.destroy(subCategory.image.public_id);

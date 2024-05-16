@@ -28,9 +28,7 @@ brandRouter.post(
       const { secure_url, public_id } = await cloudinary.uploader.upload(
         req.file.path,
         { folder: `ecommerce/brand` },
-        function (error, result) {
-          if (error) console.log(error);
-        }
+        
       );
       brand.image.secure_url = secure_url;
       brand.image.public_id = public_id;
