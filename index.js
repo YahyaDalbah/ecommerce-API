@@ -5,7 +5,7 @@ import authRouter from "./api/auth.router.js";
 import userRouter from "./api/user.router.js";
 import categoryRouter from "./api/category.router.js";
 import { gloablaErrorHandler } from "./services/asyncHandler.js";
-import couponRouter from "./api/Coupon.router.js";
+import couponRouter from "./api/coupon.router.js";
 import brandRouter from "./api/brand.router.js";
 import productRouter from "./api/product.router.js";
 import cartRouter from "./api/cart.router.js";
