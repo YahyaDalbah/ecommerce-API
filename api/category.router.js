@@ -100,7 +100,6 @@ categoryRouter.put(
 );
 categoryRouter.get(
   "/:categoryId",
-  auth([roles.admin,roles.user]),
   validate(getCategorySchema),
   asyncHandler(async (req, res, next) => {
     const category = await Category.findById(req.params.categoryId)
@@ -110,7 +109,6 @@ categoryRouter.get(
 );
 categoryRouter.get(
   "/",
-  // auth,
   asyncHandler(async (req, res, next) => {
     const categories = await Category.find().populate({path: 'subCategories', select: 'name'});
 

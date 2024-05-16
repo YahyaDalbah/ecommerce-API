@@ -2,11 +2,12 @@ import { Router } from 'express';
 import Joi from 'joi';
 import { validationFields } from '../services/validationFields.js';
 import uploadFile from '../services/upload.js';
-import { validate } from './auth.middleware.js';
+import { auth, roles, validate } from './auth.middleware.js';
 import { asyncHandler } from '../services/asyncHandler.js';
 import cloudinary from '../services/cloudinary.js';
 import slugify from 'slugify';
-import SubCategory from '../DB/models/subCategory.model.js';
+import SubCategory from "../DB/models/subCategory.model.js";
+import Category from "../DB/models/category.model.js";
 const subCategoryRouter = Router({mergeParams:true})
 
 
@@ -21,11 +22,15 @@ const updateSubCategorySchema = Joi.object({
 }).required();
 subCategoryRouter.post(
   "/",
-  // auth,
+  auth([roles.admin]),
   uploadFile().single("image"),
   validate(createSubCategorySchema),
   asyncHandler(async (req, res, next) => {
     const {categoryId} = req.params
+    const category = await Category.findById(categoryId)
+    if(!category){
+      return next({err: "add subCategory: category not found"})
+    }
     const { name } = req.body;
     const slug = slugify(name);
     const image = {};
@@ -47,7 +52,7 @@ subCategoryRouter.post(
 
 subCategoryRouter.put(
   "/:subCategoryId",
-  // auth,
+  auth([roles.admin]),
   uploadFile().single("image"),
   validate(updateSubCategorySchema),
   asyncHandler(async (req, res, next) => {
@@ -90,7 +95,6 @@ subCategoryRouter.put(
 
 subCategoryRouter.get(
   "/",
-  // auth,
   asyncHandler(async (req, res, next) => {
     const subCategories = await SubCategory.find({categoryId: req.params.categoryId}).populate({
       path: 'categoryId',
