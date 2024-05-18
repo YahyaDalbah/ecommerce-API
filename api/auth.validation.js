@@ -9,4 +9,5 @@ export const signupSchema = joi.object({
   password: joi.string().required(),
   cPassword: joi.string().valid(joi.ref("password")).required(),
   userName: joi.string().alphanum().required(),
+  role: joi.string().valid("user", "admin").required(),
 });

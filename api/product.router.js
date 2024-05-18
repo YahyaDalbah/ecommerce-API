@@ -7,7 +7,7 @@ import Product from "../DB/models/product.model.js";
 import slugify from "slugify";
 import SubCategory from "../DB/models/subCategory.model.js";
 import Brand from "../DB/models/brand.model.js";
-import uploadFile from "../services/upload.js";
+import uploadFile, { HME } from "../services/upload.js";
 import cloudinary from "../services/cloudinary.js";
 
 const productRouter = Router();
@@ -39,6 +39,7 @@ productRouter.post(
     { name: "mainImage", maxCount: 1 },
     { name: "subImages", maxCount: 5 },
   ]),
+  HME,
   validate(createProductSchema),
   asyncHandler(async (req, res, next) => {
     const { name, subCategoryId, brandId } = req.body;
@@ -46,7 +47,7 @@ productRouter.post(
     req.body.slug = slug;
     const checkSubCategory = await SubCategory.findById(subCategoryId);
     const checkBrand = await Brand.findById(brandId);
-    if (await Product.findOne({ name })) {
+    if (await Product.findOne({ slug })) {
       return next({ err: "create product: duplicate name" });
     }
     if (!checkSubCategory) {
@@ -58,8 +59,7 @@ productRouter.post(
     if (req.files.mainImage) {
       const { secure_url, public_id } = await cloudinary.uploader.upload(
         req.files.mainImage[0].path,
-        { folder: `ecommerce/product` },
-        
+        { folder: `ecommerce/product` }
       );
       const image = {};
       image.secure_url = secure_url;
@@ -71,8 +71,7 @@ productRouter.post(
       for (const file of req.files.subImages) {
         const { secure_url, public_id } = await cloudinary.uploader.upload(
           file.path,
-          { folder: `ecommerce/product` },
-          
+          { folder: `ecommerce/product` }
         );
         const image = {};
         image.secure_url = secure_url;
@@ -105,7 +104,7 @@ productRouter.get(
       .limit(size)
       .skip(skip)
       .sort(req.query.sort?.replaceAll(",", " "))
-      .find({ name: { $regex: req.query.search || "", $options: "i" }, });
+      .find({ name: { $regex: req.query.search || "", $options: "i" } });
     return res.json(products);
   })
 );
@@ -116,6 +115,7 @@ productRouter.put(
     { name: "mainImage", maxCount: 1 },
     { name: "subImages", maxCount: 5 },
   ]),
+  HME,
   validate(updateProductSchema),
   asyncHandler(async (req, res, next) => {
     const { productId } = req.params;
@@ -125,13 +125,13 @@ productRouter.put(
     if (req.files && req.files.mainImage) {
       const { secure_url, public_id } = await cloudinary.uploader.upload(
         req.files.mainImage[0].path,
-        { folder: `ecommerce/product` },
-        
+        { folder: `ecommerce/product` }
       );
       const image = {};
       image.secure_url = secure_url;
       image.public_id = public_id;
-      await cloudinary.uploader.destroy(product.mainImage.public_id);
+      if (product.mainImage)
+        await cloudinary.uploader.destroy(product.mainImage.public_id);
       product.mainImage = image;
     }
     if (req.files && req.files.subImages) {
@@ -139,19 +139,20 @@ productRouter.put(
       for (const file of req.files.subImages) {
         const { secure_url, public_id } = await cloudinary.uploader.upload(
           file.path,
-          { folder: `ecommerce/product` },
-          
+          { folder: `ecommerce/product` }
         );
         const image = {};
         image.secure_url = secure_url;
         image.public_id = public_id;
         subImages.push(image);
       }
-      for (const file of product.subImages) {
-        await cloudinary.uploader.destroy(file.public_id);
-      }
+      if (product.subImages)
+        for (const file of product.subImages) {
+          await cloudinary.uploader.destroy(file.public_id);
+        }
       product.subImages = subImages;
     }
+    await product.save();
     return res.json(product);
   })
 );

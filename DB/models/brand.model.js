@@ -7,9 +7,6 @@ const brandSchema = new Schema(
       required: true,
       unique: true,
     },
-    image: {
-      type: Object,
-    },
     categoryId: {
       type: Types.ObjectId,
       ref: "Category",

@@ -7,7 +7,6 @@ import Cart from "../DB/models/cart.model.js";
 import Product from "../DB/models/product.model.js";
 import createInvoice from "../services/createInvoice.js";
 
-
 const cartRouter = Router();
 
 const createCartSchema = Joi.object({
@@ -54,7 +53,7 @@ cartRouter.post(
       });
     }
     product.stock -= qty;
-    product.save(); //can leave it
+    await product.save();
 
     return res.json(cart);
   })
@@ -62,7 +61,7 @@ cartRouter.post(
 
 cartRouter.put(
   "/",
-  auth([roles.admin, roles.user]),
+  auth([roles.user]),
   validate(createCartSchema),
   asyncHandler(async (req, res, next) => {
     const { productId, qty } = req.body;
@@ -71,6 +70,9 @@ cartRouter.put(
     const product = await Product.findById(productId);
     if (!cart) {
       return next({ err: "update cart: no cart" });
+    }
+    if (!product) {
+      return next({ err: "update cart: no product" });
     }
     let found = false;
     for (const cartProduct of cart.products) {
@@ -102,6 +104,7 @@ cartRouter.put(
 
 cartRouter.get(
   "/",
+  auth([roles.user]),
   asyncHandler(async (req, res) => {
     const userId = req.user.id;
     let cart = await Cart.findOne({ userId });
@@ -109,20 +112,24 @@ cartRouter.get(
   })
 );
 
-
-
 cartRouter.post(
   "/checkout",
-  auth([roles.user]),
+  auth([roles.user, roles.admin]),
   asyncHandler(async (req, res, next) => {
-    const {address,city,country,state} = req.body
-    const {user} = req
-    let cart = await Cart.findOne({ userId:user.id }).populate({path: "products", populate:{path: 'productId',select: `name description price`}});
+    const { address, city, country, state } = req.body;
+    const { user } = req;
+    let cart = await Cart.findOne({ userId: user.id }).populate({
+      path: "products",
+      populate: { path: "productId", select: `name description price` },
+    });
     if (!cart) {
       return next({ err: "checkout cart: no cart" });
     }
-    let subtotal = 0
-    const items = cart.products.map(product => {
+    if (cart.products.length == 0) {
+      return next({ err: "checkout cart: no products" });
+    }
+    let subtotal = 0;
+    const items = cart.products.map((product) => {
       subtotal += product.qty * product.productId.price;
       return {
         item: product.productId.name,
@@ -130,7 +137,7 @@ cartRouter.post(
         amount: product.qty * product.productId.price,
         quantity: product.qty,
       };
-    })
+    });
     const invoice = {
       shipping: {
         name: user.userName,
@@ -143,11 +150,13 @@ cartRouter.post(
 
       items,
       subtotal,
-      paid: 0,
+      paid: subtotal,
       invoice_nr: cart._id,
-    }
+    };
     createInvoice(invoice, "invoice.pdf");
-    res.json("checkout completed")
+    cart.products = [];
+    await cart.save();
+    return res.json("checkout completed");
   })
 );
 

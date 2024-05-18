@@ -17,7 +17,7 @@ router.post(
   "/signup",
   validate(signupSchema),
   asyncHandler(async (req, res) => {
-    const { userName, email, password } = req.body;
+    const { userName, email, password,role } = req.body;
 
     const found = await user.findOne({ email });
 
@@ -25,7 +25,7 @@ router.post(
       return res.json("exists");
     }
     const hashPass = hash(password);
-    const userInfo = await user.create({ userName, password: hashPass, email });
+    const userInfo = await user.create({ userName, password: hashPass, email,role });
     const token = jwt.sign({ email }, process.env.SIGN, { expiresIn: 60 * 5 });
     const refreshToken = jwt.sign({ email }, process.env.SIGN, {
       expiresIn: 60 * 60 * 24,
@@ -53,7 +53,7 @@ router.post(
       const token = jwt.sign(
         { id: userInfo._id, role: userInfo.role },
         process.env.SIGN,
-        { expiresIn: 60 * 60 }
+        { expiresIn: 60 * 60 * 24*365 }
       );
       const refreshToken = jwt.sign(
         { id: userInfo._id, role: userInfo.role },

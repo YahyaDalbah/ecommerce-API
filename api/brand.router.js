@@ -1,9 +1,10 @@
 import { Router } from "express";
-import { validate } from "./auth.middleware.js";
+import { auth, roles, validate } from "./auth.middleware.js";
 import Brand from "../DB/models/brand.model.js";
 import { asyncHandler } from "../services/asyncHandler.js";
 import Joi from "joi";
 import { validationFields } from "../services/validationFields.js";
+import Category from "../DB/models/category.model.js";
 
 const brandRouter = Router();
 
@@ -19,50 +20,67 @@ const updateBrandSchema = Joi.object({
 
 brandRouter.post(
   "/",
+  auth([roles.admin]),
   validate(createBrandSchema),
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req, res, next) => {
     const { name, categoryId } = req.body;
-
-    const brand = await Brand.create({ name, categoryId });
-    if (req.file) {
-      const { secure_url, public_id } = await cloudinary.uploader.upload(
-        req.file.path,
-        { folder: `ecommerce/brand` },
-        
-      );
-      brand.image.secure_url = secure_url;
-      brand.image.public_id = public_id;
-      await brand.save();
+    const category = await Category.findById(categoryId);
+    if (!category) {
+      return next({ err: "category not found" });
     }
+    const brand = await Brand.create({ name, categoryId });
     res.json(brand);
   })
 );
 brandRouter.get(
   "/:brandId",
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req, res,next) => {
     const { brandId } = req.params;
     const brand = await Brand.findById(brandId);
+    if (!brand) {
+      return next({ err: "brand not found" });
+    }
     return res.json(brand);
   })
 );
 brandRouter.get(
   "/all/:categoryId",
+  asyncHandler(async (req, res,next) => {
+    const {categoryId} = req.params
+    const category = await Category.findById(categoryId);
+    if (!category) {
+      return next({ err: "category not found" });
+    }
+    const brands = await Brand.find({ categoryId });
+    return res.json(brands);
+  })
+);
+brandRouter.get(
+  "/",
   asyncHandler(async (req, res) => {
-    const brands = await Brand.find({ categoryId: req.params.categoryId });
+    const brands = await Brand.find();
     return res.json(brands);
   })
 );
 brandRouter.put(
   "/:brandId",
+  auth([roles.admin]),
   validate(updateBrandSchema),
   asyncHandler(async (req, res, next) => {
     const { name, categoryId } = req.body;
     const { brandId } = req.params;
 
     const brand = await Brand.findById(brandId);
-    if (name == brand.name) {
+    const category = await Category.findById(categoryId);
+    if (!category) {
+      return next({ err: "category not found" });
+    }
+    if (!brand) {
+      return next({ err: "brand not found" });
+    }
+    if (name == brand.name && categoryId == brand.categoryId) {
       return next({
-        err: "update brand error: name duplicated",
+        err: "update brand error: name & category duplicated",
       });
     }
     if (name) brand.name = name;
