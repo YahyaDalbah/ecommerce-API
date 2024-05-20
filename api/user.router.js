@@ -1,9 +1,19 @@
 import { Router } from "express";
-import { auth } from "./auth.middleware.js";
+import { auth, roles } from "./auth.middleware.js";
+import User from "../DB/models/user.model.js";
+import { asyncHandler } from "../services/asyncHandler.js";
 
 const userRouter = Router();
 
-userRouter.get("/profile", auth, (req, res) => {
-  res.json(req.user);
-});
+userRouter.get(
+  "/",
+  auth([roles.admin, roles.user]),
+  asyncHandler(async (req, res,next) => {
+    const user = await User.findById(req.user.id);
+    if(!user){
+      return next({err: "user not found",cause:404})
+    }
+    res.json(user);
+  })
+);
 export default userRouter;
