@@ -44,7 +44,7 @@ export function validate(schema) {
   return (req, res, next) => {
     const input = { ...req.body, ...req.params, ...req.query };
 
-    const validationRes = schema.validate(input, { abortEarly: false });
+    const validationRes = schema.validate(input);
     if (validationRes.error) {
       return res.status(500).json(validationRes.error);
     }

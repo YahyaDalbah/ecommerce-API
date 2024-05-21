@@ -1,7 +1,7 @@
 import { Router } from "express";
 import user from "../DB/models/user.model.js";
 import { hash } from "../services/hash.js";
-import { compare } from "bcrypt";
+import { compareSync } from "bcrypt";
 import jwt from "jsonwebtoken";
 import { asyncHandler } from "../services/asyncHandler.js";
 import { loginSchema, signupSchema } from "./auth.validation.js";
@@ -16,13 +16,13 @@ const router = Router();
 router.post(
   "/signup",
   validate(signupSchema),
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req, res,next) => {
     const { userName, email, password, role } = req.body;
 
     const found = await user.findOne({ email });
 
     if (found) {
-      return res.json("exists");
+      return next({ err: "user exists", cause: 400 });
     }
     const hashPass = hash(password);
     const userInfo = await user.create({
@@ -53,13 +53,14 @@ router.post(
 router.post(
   "/login",
   validate(loginSchema),
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req, res,next) => {
     const { email, password } = req.body;
     const userInfo = await user.findOne({ email });
     if (!userInfo) {
-      return res.json("email not exists");
+      return next({ err: "email doesn't exist", cause: 404 });
     }
-    const matchPass = compare(password, userInfo.password);
+    const matchPass = compareSync(password, userInfo.password);
+    
     if (matchPass) {
       const token = jwt.sign(
         { id: userInfo._id, role: userInfo.role },
@@ -73,7 +74,7 @@ router.post(
       );
       res.json({ accessToken: token, refreshToken });
     } else {
-      res.json("password not match");
+      return next({ err: "passwords don't match", cause: 400 });
     }
   })
 );
@@ -85,7 +86,7 @@ router.post(
     const token = jwt.sign({ id, role }, process.env.SIGN, {
       expiresIn: 60 * 60,
     });
-    return res.json(token)
+    return res.json(token);
   })
 );
 router.get(
