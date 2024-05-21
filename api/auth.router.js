@@ -17,7 +17,7 @@ router.post(
   "/signup",
   validate(signupSchema),
   asyncHandler(async (req, res) => {
-    const { userName, email, password,role } = req.body;
+    const { userName, email, password, role } = req.body;
 
     const found = await user.findOne({ email });
 
@@ -25,18 +25,29 @@ router.post(
       return res.json("exists");
     }
     const hashPass = hash(password);
-    const userInfo = await user.create({ userName, password: hashPass, email,role });
-    const token = jwt.sign({ email }, process.env.SIGN, { expiresIn: 60 * 5 });
-    const refreshToken = jwt.sign({ email }, process.env.SIGN, {
-      expiresIn: 60 * 60 * 24,
+    const userInfo = await user.create({
+      userName,
+      password: hashPass,
+      email,
+      role,
     });
+    const token = jwt.sign(
+      { id: userInfo._id, role: userInfo.role },
+      process.env.SIGN,
+      { expiresIn: 60 * 60 }
+    );
+    const refreshToken = jwt.sign(
+      { id: userInfo._id, role: userInfo.role },
+      process.env.SIGN,
+      { expiresIn: 60 * 60 * 24 * 365 }
+    );
     await sendEmail(
       //it may be sent in spam
       email,
       "email verification link",
       `<a href="${req.protocol}://${req.headers.host}/auth/confirmEmail/${token}">verify email </a><br /> <br /><a href="${req.protocol}://${req.headers.host}/auth/sendConfirmEmail/${refreshToken}">send another email </a>`
     );
-    res.status(201).json(userInfo);
+    res.status(201).json({ accessToken: token, refreshToken });
   })
 );
 router.post(
@@ -53,17 +64,28 @@ router.post(
       const token = jwt.sign(
         { id: userInfo._id, role: userInfo.role },
         process.env.SIGN,
-        { expiresIn: 60 * 60 * 24*365 }
+        { expiresIn: 60 * 60 }
       );
       const refreshToken = jwt.sign(
         { id: userInfo._id, role: userInfo.role },
         process.env.SIGN,
         { expiresIn: 60 * 60 * 24 * 365 }
       );
-      res.json({ token, refreshToken });
+      res.json({ accessToken: token, refreshToken });
     } else {
       res.json("password not match");
     }
+  })
+);
+router.post(
+  "/refresh",
+  asyncHandler(async (req, res) => {
+    const { refreshToken } = req.body;
+    const { id, role } = verify(refreshToken);
+    const token = jwt.sign({ id, role }, process.env.SIGN, {
+      expiresIn: 60 * 60,
+    });
+    return res.json(token)
   })
 );
 router.get(
@@ -140,7 +162,7 @@ router.patch(
       return next({ err: "forgetPassword error: code is not matched" });
     }
     user.password = password;
-    user.changedPasswordDate = Date.now()
+    user.changedPasswordDate = Date.now();
     await user.save();
     return res.json(user);
   })
