@@ -46,7 +46,7 @@ export function validate(schema) {
 
     const validationRes = schema.validate(input);
     if (validationRes.error) {
-      return res.status(500).json(validationRes.error);
+      return next({ err: validationRes.error.details[0].message.replaceAll('"','') });
     }
     next();
   };
