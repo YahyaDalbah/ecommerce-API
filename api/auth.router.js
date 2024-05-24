@@ -162,7 +162,7 @@ router.patch(
     if (user.forgetCode != code) {
       return next({ err: "forgetPassword error: code is not matched" });
     }
-    user.password = password;
+    user.password = hash(password);
     user.changedPasswordDate = Date.now();
     await user.save();
     return res.json(user);
