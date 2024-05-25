@@ -16,7 +16,7 @@ const router = Router();
 router.post(
   "/signup",
   validate(signupSchema),
-  asyncHandler(async (req, res,next) => {
+  asyncHandler(async (req, res, next) => {
     const { userName, email, password, role } = req.body;
 
     const found = await user.findOne({ email });
@@ -32,12 +32,12 @@ router.post(
       role,
     });
     const token = jwt.sign(
-      { id: userInfo._id, role: userInfo.role },
+      { id: userInfo._id, role: userInfo.role, email: userInfo.email },
       process.env.SIGN,
       { expiresIn: 60 * 60 }
     );
     const refreshToken = jwt.sign(
-      { id: userInfo._id, role: userInfo.role },
+      { id: userInfo._id, role: userInfo.role, email: userInfo.email },
       process.env.SIGN,
       { expiresIn: 60 * 60 * 24 * 365 }
     );
@@ -53,14 +53,13 @@ router.post(
 router.post(
   "/login",
   validate(loginSchema),
-  asyncHandler(async (req, res,next) => {
+  asyncHandler(async (req, res, next) => {
     const { email, password } = req.body;
     const userInfo = await user.findOne({ email });
     if (!userInfo) {
       return next({ err: "email doesn't exist", cause: 404 });
     }
     const matchPass = compareSync(password, userInfo.password);
-    
     if (matchPass) {
       const token = jwt.sign(
         { id: userInfo._id, role: userInfo.role },
@@ -104,6 +103,9 @@ router.get(
     if (!found) {
       return res.json("email not found");
     }
+    if (found.confirmEmail) {
+      return res.json("email is already verified");
+    }
     const userInfo = await user.updateOne({ email }, { confirmEmail: true });
     res.json(userInfo);
   })
@@ -123,9 +125,9 @@ router.get(
     if (!found) {
       return res.json("email not found");
     }
-    token = jwt.sign({ email }, process.env.SIGN, { expiresIn: 60 * 5 });
+    token = jwt.sign({ email }, process.env.SIGN, { expiresIn: 60 * 60 });
     const refreshToken = jwt.sign({ email }, process.env.SIGN, {
-      expiresIn: 60 * 60 * 24,
+      expiresIn: 60 * 60 * 24 * 365,
     });
     await sendEmail(
       //it may be sent in spam
@@ -133,7 +135,7 @@ router.get(
       "email verification link",
       `<a href="${req.protocol}://${req.headers.host}/auth/confirmEmail/${token}">verify email </a><br /> <br /><a href="${req.protocol}://${req.headers.host}/auth/sendConfirmEmail/${refreshToken}">send another email </a>`
     );
-    res.json("new email sent");
+    return res.json("new email sent");
   })
 );
 router.patch(
