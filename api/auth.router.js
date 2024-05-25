@@ -62,12 +62,12 @@ router.post(
     const matchPass = compareSync(password, userInfo.password);
     if (matchPass) {
       const token = jwt.sign(
-        { id: userInfo._id, role: userInfo.role },
+        { id: userInfo._id, role: userInfo.role, email: userInfo.email },
         process.env.SIGN,
         { expiresIn: 60 * 60 }
       );
       const refreshToken = jwt.sign(
-        { id: userInfo._id, role: userInfo.role },
+        { id: userInfo._id, role: userInfo.role, email: userInfo.email },
         process.env.SIGN,
         { expiresIn: 60 * 60 * 24 * 365 }
       );
@@ -124,6 +124,9 @@ router.get(
 
     if (!found) {
       return res.json("email not found");
+    }
+    if (found.confirmEmail) {
+      return res.json("email is already verified");
     }
     token = jwt.sign({ email }, process.env.SIGN, { expiresIn: 60 * 60 });
     const refreshToken = jwt.sign({ email }, process.env.SIGN, {
