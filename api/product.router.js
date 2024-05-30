@@ -9,6 +9,7 @@ import SubCategory from "../DB/models/subCategory.model.js";
 import Brand from "../DB/models/brand.model.js";
 import uploadFile, { HME } from "../services/upload.js";
 import cloudinary from "../services/cloudinary.js";
+import Category from "../DB/models/category.model.js";
 
 const productRouter = Router();
 
@@ -44,19 +45,19 @@ productRouter.post(
   HME,
   validate(createProductSchema),
   asyncHandler(async (req, res, next) => {
-    const { name, subCategoryId, brandId } = req.body;
+    const { name, subCategoryId, categoryId } = req.body;
     const slug = slugify(name);
     req.body.slug = slug;
-    const checkSubCategory = await SubCategory.findById(subCategoryId);
-    const checkBrand = await Brand.findById(brandId);
+    const subCategory = await SubCategory.findById(subCategoryId);
+    const category = await Category.findById(categoryId);
     if (await Product.findOne({ slug })) {
-      return next({ err: "create product: duplicate name" });
+      return next({ err: "duplicate name" });
     }
-    if (!checkSubCategory) {
-      return next({ err: "create product fail: subCategory not found" });
+    if (!subCategory) {
+      return next({ err: "subCategory not found" });
     }
-    if (!checkBrand) {
-      return next({ err: "create product fail: brand not found" });
+    if (!category) {
+      return next({ err: "category not found" });
     }
     if (req.files.mainImage) {
       const { secure_url, public_id } = await cloudinary.uploader.upload(
@@ -82,7 +83,9 @@ productRouter.post(
       }
     }
     const product = await Product.create(req.body);
-    res.json(product);
+    const categoryName = category.name;
+    const subCategoryName = subCategory.name;
+    res.json({...product,categoryName,subCategoryName});
   })
 );
 
