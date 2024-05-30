@@ -57,33 +57,35 @@ productRouter.post(
     if (!category) {
       return next({ err: "category not found" });
     }
-    if (req.files.mainImage) {
-      const { secure_url, public_id } = await cloudinary.uploader.upload(
-        req.files.mainImage[0].path,
-        { folder: `ecommerce/product` }
-      );
-      const image = {};
-      image.secure_url = secure_url;
-      image.public_id = public_id;
-      req.body.mainImage = image;
-    }
-    if (req.files.subImages) {
-      req.body.subImages = [];
-      for (const file of req.files.subImages) {
+    if (req.files) {
+      if (req.files.mainImage) {
         const { secure_url, public_id } = await cloudinary.uploader.upload(
-          file.path,
+          req.files.mainImage[0].path,
           { folder: `ecommerce/product` }
         );
         const image = {};
         image.secure_url = secure_url;
         image.public_id = public_id;
-        req.body.subImages.push(image);
+        req.body.mainImage = image;
+      }
+      if (req.files.subImages) {
+        req.body.subImages = [];
+        for (const file of req.files.subImages) {
+          const { secure_url, public_id } = await cloudinary.uploader.upload(
+            file.path,
+            { folder: `ecommerce/product` }
+          );
+          const image = {};
+          image.secure_url = secure_url;
+          image.public_id = public_id;
+          req.body.subImages.push(image);
+        }
       }
     }
     const product = await Product.create(req.body);
     const categoryName = category.name;
     const subCategoryName = subCategory.name;
-    res.json({...product,categoryName,subCategoryName});
+    res.json({ ...product, categoryName, subCategoryName });
   })
 );
 
