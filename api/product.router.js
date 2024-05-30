@@ -20,7 +20,6 @@ const createProductSchema = Joi.object({
   discount: Joi.number(),
   stock: Joi.number().required(),
   subCategoryId: validationFields.id.required(),
-  brandId: validationFields.id,
   categoryId: validationFields.id.required(),
 }).required();
 const updateProductSchema = Joi.object({
@@ -30,7 +29,6 @@ const updateProductSchema = Joi.object({
   discount: Joi.number(),
   stock: Joi.number(),
   subCategoryId: validationFields.id,
-  brandId: validationFields.id,
   categoryId: validationFields.id,
   productId: validationFields.id.required(),
 }).required();
