@@ -33,10 +33,14 @@ const productSchema = new Schema(
       ref: "SubCategory",
       required: true,
     },
+    categoryId: {
+      type: Types.ObjectId,
+      ref: "Category",
+      required: true,
+    },
     brandId: {
       type: Types.ObjectId,
       ref: "Brand",
-      required: true,
     },
     colors: [String],
     sizes: {

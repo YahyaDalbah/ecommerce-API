@@ -29,7 +29,7 @@ subCategoryRouter.post(
     const {categoryId} = req.params
     const category = await Category.findById(categoryId)
     if(!category){
-      return next({err: "add subCategory: category not found"})
+      return next({err: "category not found"})
     }
     const { name } = req.body;
     const slug = slugify(name);
@@ -64,13 +64,13 @@ subCategoryRouter.put(
     if (!subCategory) {
       return next({
         cause: 400,
-        err: "update subCategory failed: subCategory not found",
+        err: "subCategory not found",
       });
     }
     if (subCategory.name == name) {
       return next({
         cause: 400,
-        err: "update subCategory failed: duplicate name",
+        err: "duplicate name",
       });
     }
     subCategory.name = name;
@@ -102,6 +102,17 @@ subCategoryRouter.get(
     });
 
     return res.json(subCategories);
+  })
+);
+subCategoryRouter.delete(
+  "/:subCategoryId",
+  asyncHandler(async (req, res, next) => {
+    const { subCategoryId } = req.params;
+    const subCategory = await SubCategory.deleteOne({ _id: subCategoryId });
+
+    return res.json(
+      subCategory.deletedCount > 0 ? "subCategory deleted" : "error deleting"
+    );
   })
 );
 

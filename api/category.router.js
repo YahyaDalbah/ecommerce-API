@@ -115,4 +115,10 @@ categoryRouter.get(
     return res.json(categories);
   })
 );
+categoryRouter.delete("/:categoryId",asyncHandler(async (req,res,next) => {
+  const {categoryId} = req.params
+  const category = await Category.deleteOne({_id: categoryId})
+  
+  return res.json(category.deletedCount > 0 ? "category deleted" : "error deleting")
+}))
 export default categoryRouter;

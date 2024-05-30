@@ -1,4 +1,6 @@
 import mongoose, { Schema, Types, model } from "mongoose";
+import SubCategory from "./subCategory.model.js";
+import Product from "./product.model.js";
 
 const categorySchema = new Schema(
   {
@@ -32,6 +34,17 @@ categorySchema.virtual("subCategories", {
   foreignField: "categoryId",
   ref: "SubCategory",
 });
-
+categorySchema.pre(
+  "deleteOne",
+  { document: false, query: true },
+  async function () {
+    const { _id } = this.getFilter();
+    const doc = await this.model.findById(_id);
+    if (doc) {
+      await SubCategory.deleteMany({ categoryId: doc._id });
+      await Product.deleteMany({ categoryId: doc._id });
+    }
+  }
+);
 const Category = mongoose.models.Category || model("Category", categorySchema);
 export default Category;
