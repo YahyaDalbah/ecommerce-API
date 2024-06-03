@@ -21,6 +21,8 @@ const createProductSchema = Joi.object({
   stock: Joi.number().required(),
   subCategoryId: validationFields.id.required(),
   categoryId: validationFields.id.required(),
+  mainImage: Joi.optional(),
+  subImage: Joi.optional()
 }).required();
 const updateProductSchema = Joi.object({
   name: Joi.string().min(2),
