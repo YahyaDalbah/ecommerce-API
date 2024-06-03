@@ -85,7 +85,12 @@ productRouter.post(
     const product = await Product.create(req.body);
     const categoryName = category.name;
     const subCategoryName = subCategory.name;
-    res.json({ ...product, categoryName, subCategoryName });
+    const response = {
+      ...product._doc,
+      categoryName,
+      subCategoryName,
+    };
+    res.json(response);
   })
 );
 
