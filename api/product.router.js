@@ -135,7 +135,7 @@ productRouter.put(
   asyncHandler(async (req, res, next) => {
     const { productId } = req.params;
 
-    const product = await Product.findByIdAndUpdate(productId, { ...req.body });
+    const product = await Product.findByIdAndUpdate(productId, { ...req.body },{new: true});
 
     if (req.files && req.files.mainImage) {
       const { secure_url, public_id } = await cloudinary.uploader.upload(
