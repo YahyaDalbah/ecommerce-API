@@ -57,6 +57,9 @@ productRouter.post(
     if (!category) {
       return next({ err: "category not found" });
     }
+    if(subCategory.categoryId != category._id){
+      return next({ err: "subcategory should be part of category" });
+    }
     if (req.files) {
       if (req.files.mainImage) {
         const { secure_url, public_id } = await cloudinary.uploader.upload(
@@ -86,7 +89,7 @@ productRouter.post(
     const categoryName = category.name;
     const subCategoryName = subCategory.name;
     const response = {
-      ...product._doc,
+      ...product,
       categoryName,
       subCategoryName,
     };
