@@ -174,4 +174,15 @@ productRouter.put(
 productRouter.patch("/softDelete/:productId", (req, res) => {
   //just update the deleted field
 });
+productRouter.delete(
+  "/:productId",
+  asyncHandler(async (req, res, next) => {
+    const { productId } = req.params;
+    const product = await Product.deleteOne({ _id: productId });
+
+    return res.json(
+      product.deletedCount > 0 ? "product deleted" : "error deleting"
+    );
+  })
+);
 export default productRouter;
