@@ -10,7 +10,7 @@ import createInvoice from "../services/createInvoice.js";
 const cartRouter = Router();
 
 const createCartSchema = Joi.object({
-  qty: Joi.number().required(),
+  qty: Joi.number().min(1).required(),
   productId: validationFields.id.required(),
 }).required();
 const updateCartSchema = Joi.object({
@@ -27,10 +27,10 @@ cartRouter.post(
     const userId = req.user.id;
     const product = await Product.findById(productId);
     if (!product) {
-      return next({ err: `add to cart: product not found` });
+      return next({ err: `product not found` });
     }
     if (product.stock < qty) {
-      return next({ err: `add to cart: product not enough stock` });
+      return next({ err: `product not enough stock` });
     }
     let cart = await Cart.findOne({ userId });
     if (cart) {
@@ -43,16 +43,24 @@ cartRouter.post(
         }
       }
       if (!found) {
-        cart.products.push({ productId, qty });
+        cart.products.push({
+          productId,
+          qty,
+          name: product.name,
+          price: product.price,
+        });
       }
       await cart.save();
     } else {
       cart = await Cart.create({
-        products: [{ productId, qty }],
+        products: [
+          { productId, qty, name: product.name, price: product.price },
+        ],
         userId,
       });
     }
     product.stock -= qty;
+
     await product.save();
 
     return res.json(cart);
@@ -62,23 +70,23 @@ cartRouter.post(
 cartRouter.put(
   "/",
   auth([roles.user]),
-  validate(createCartSchema),
+  validate(updateCartSchema),
   asyncHandler(async (req, res, next) => {
     const { productId, qty } = req.body;
     const userId = req.user.id;
     let cart = await Cart.findOne({ userId });
     const product = await Product.findById(productId);
     if (!cart) {
-      return next({ err: "update cart: no cart" });
+      return next({ err: "no cart" });
     }
     if (!product) {
-      return next({ err: "update cart: no product" });
+      return next({ err: "no product" });
     }
     let found = false;
     for (const cartProduct of cart.products) {
       if (cartProduct.productId == productId) {
         if (product.stock < qty - cartProduct.qty) {
-          return next({ err: `update cart: product not enough stock` });
+          return next({ err: `product not enough stock` });
         }
         product.stock -= qty - cartProduct.qty;
         if (qty == 0) {
@@ -94,7 +102,7 @@ cartRouter.put(
       }
     }
     if (!found) {
-      return next({ err: "update cart: product not found" });
+      return next({ err: "product not found" });
     }
     await cart.save();
     await product.save();
@@ -123,10 +131,10 @@ cartRouter.post(
       populate: { path: "productId", select: `name description price` },
     });
     if (!cart) {
-      return next({ err: "checkout cart: no cart" });
+      return next({ err: "no cart" });
     }
     if (cart.products.length == 0) {
-      return next({ err: "checkout cart: no products" });
+      return next({ err: "no products" });
     }
     let subtotal = 0;
     const items = cart.products.map((product) => {
