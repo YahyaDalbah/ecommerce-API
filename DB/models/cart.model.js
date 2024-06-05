@@ -1,3 +1,4 @@
+import { required } from "joi";
 import mongoose, { Schema, Types, model } from "mongoose";
 
 const cartSchema = new Schema({
@@ -11,6 +12,8 @@ const cartSchema = new Schema({
     {
       productId: { type: Types.ObjectId, ref: "Product" },
       qty: { type: Number, default: 1 },
+      name: { type: String, required: true },
+      price: { type: Number, required: true },
     },
   ],
 });
