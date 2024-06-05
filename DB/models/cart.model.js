@@ -1,4 +1,3 @@
-import { required } from "joi";
 import mongoose, { Schema, Types, model } from "mongoose";
 
 const cartSchema = new Schema({
