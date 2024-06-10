@@ -9,11 +9,16 @@ import couponRouter from "./api/coupon.router.js";
 import brandRouter from "./api/brand.router.js";
 import productRouter from "./api/product.router.js";
 import cartRouter from "./api/cart.router.js";
-import cors from "cors"
+import cors from "cors";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-var whitelist = ["http://127.0.0.1:5500", "http://localhost:3000","http://localhost:3001"];
+var whitelist = [
+  "http://127.0.0.1:5500",
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "https://yahyadalbah.github.io",
+];
 var corsOptions = {
   origin: function (origin, callback) {
     if (whitelist.indexOf(origin) !== -1 || !origin) {
@@ -23,7 +28,7 @@ var corsOptions = {
     }
   },
 };
-app.use(cors(corsOptions))
+app.use(cors(corsOptions));
 await connectDB();
 app.use(express.json());
 app.use("/auth", authRouter);
